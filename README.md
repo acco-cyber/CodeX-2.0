@@ -1,23 +1,32 @@
 # CodeX-2.0
 
-## Added Kaggle Nemotron Inference Script
+## MJFM × E-MM1 5-Portion Kaggle Implementation
 
-This repository now includes `nemotron_reasoning_kaggle_bulletproof.py`, a two-part Kaggle inference script for the NVIDIA Nemotron reasoning challenge.
+This repository now includes a runnable, portion-by-portion implementation for the **Multimodal JEPA-Enhanced Foundation Model (MJFM)** on the **E-MM1** dataset.
 
-### Highlights
-- Uses the requested competition data path and model path.
-- Keeps model loading local-only for Kaggle stability.
-- Includes a `mamba_ssm` compatibility stub for import-time failures.
-- Falls back to TF-IDF retrieval when the model cannot load or generate.
-- Detects text and label columns automatically.
-- Writes a submission file to `/kaggle/working/submission.csv`.
+### What was added
+- A reusable Python package: `mjfm_emm1/`
+- Five runnable Kaggle-oriented scripts under `scripts/`
+- Checkpoint-oriented flow matching the requested P1 → P5 execution plan
+- Mock-data fallback support so the scripts can still be smoke-tested outside Kaggle
 
-### Paths
-- Data: `/kaggle/input/competitions/nvidia-nemotron-model-reasoning-challenge`
-- Model: `/kaggle/input/models/metric/nemotron-3-nano-30b-a3b-bf16/transformers/default/1`
-- Output: `/kaggle/working/submission.csv`
+### Portion scripts
+1. `scripts/portion1_setup_data.py`
+2. `scripts/portion2_vision_jepa.py`
+3. `scripts/portion3_text_multimodal.py`
+4. `scripts/portion4_audio_fusion.py`
+5. `scripts/portion5_eval_release.py`
 
-### Run
+### Example local smoke-test flow
 ```bash
-python nemotron_reasoning_kaggle_bulletproof.py
+python scripts/portion1_setup_data.py --work-dir ./artifacts --allow-mock-data
+python scripts/portion2_vision_jepa.py --work-dir ./artifacts --allow-mock-data --steps 2 --batch-size 2
+python scripts/portion3_text_multimodal.py --work-dir ./artifacts --allow-mock-data --steps 2 --batch-size 2 --vision-ckpt ./artifacts/ckpt_jepa_vision.pt
+python scripts/portion4_audio_fusion.py --work-dir ./artifacts --allow-mock-data --steps 2 --batch-size 2 --multimodal-ckpt ./artifacts/ckpt_multimodal.pt
+python scripts/portion5_eval_release.py --work-dir ./artifacts --full-ckpt ./artifacts/ckpt_full_mjfm.pt
 ```
+
+### Notes
+- On Kaggle, disable mock mode and point the scripts at `/kaggle/working`.
+- The code is structured so you can scale the compact local smoke-test defaults to the larger H100 training budgets from your full plan.
+- The training scripts save stage checkpoints compatible with the next portion.
